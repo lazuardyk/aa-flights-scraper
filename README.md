@@ -55,8 +55,6 @@ python scrape.py \
   --proxy http://user:pass@proxy.com:8080
 ```
 
-This will save `award_response.json` and `revenue_response.json` to the current directory for debugging purposes.
-
 ### Docker Usage
 
 Basic usage (prints to stdout):
