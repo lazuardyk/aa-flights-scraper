@@ -25,7 +25,7 @@ pip install -r requirements.txt
 Build the image:
 
 ```bash
-docker build -t aa-scraper .
+docker build -t aa-scraper:latest .
 ```
 
 ## Usage
@@ -85,7 +85,7 @@ python scrape.py \
 Basic usage (prints to stdout):
 
 ```bash
-docker run --rm aa-scraper \
+docker run --rm aa-scraper:latest \
   --origin LAX \
   --destination JFK \
   --date 2025-12-15 \
@@ -96,7 +96,7 @@ docker run --rm aa-scraper \
 Save to file:
 
 ```bash
-docker run --rm -v $(pwd)/output:/output aa-scraper \
+docker run --rm -v $(pwd)/output:/output aa-scraper:latest \
   --origin LAX \
   --destination JFK \
   --date 2025-12-15 \
@@ -108,7 +108,7 @@ docker run --rm -v $(pwd)/output:/output aa-scraper \
 With proxy:
 
 ```bash
-docker run --rm -v $(pwd)/output:/output aa-scraper \
+docker run --rm -v $(pwd)/output:/output aa-scraper:latest \
   --origin LAX \
   --destination JFK \
   --date 2025-12-15 \
