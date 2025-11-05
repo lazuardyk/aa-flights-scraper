@@ -1,0 +1,9 @@
+*.json
+*.pyc
+__pycache__
+.git
+.gitignore
+README.md
+.venv
+venv
+*.md
