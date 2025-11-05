@@ -80,6 +80,20 @@ python scrape.py \
   --output results.json
 ```
 
+Debug mode (save raw API responses):
+
+```bash
+python scrape.py \
+  --origin LAX \
+  --destination JFK \
+  --date 2025-12-15 \
+  --passengers 1 \
+  --class economy \
+  --save-responses
+```
+
+This will save `award_response.json` and `revenue_response.json` to the current directory for debugging purposes.
+
 ### Docker Usage
 
 Basic usage (prints to stdout):
@@ -120,15 +134,16 @@ docker run --rm -v $(pwd)/output:/output aa-scraper:latest \
 
 ## Command Line Arguments
 
-| Argument        | Required | Description                                          |
-| --------------- | -------- | ---------------------------------------------------- |
-| `--origin`      | **Yes**  | Origin airport code (e.g., LAX, SFO, ORD)            |
-| `--destination` | **Yes**  | Destination airport code (e.g., JFK, BOS, MIA)       |
-| `--date`        | **Yes**  | Departure date in YYYY-MM-DD format                  |
-| `--passengers`  | **Yes**  | Number of passengers                                 |
-| `--class`       | **Yes**  | Cabin class (must be "economy")                      |
-| `--output`      | No       | Output file path - if not provided, prints to stdout |
-| `--proxy`       | No       | Proxy URL (e.g., http://user:pass@host:port)         |
+| Argument           | Required | Description                                                      |
+| ------------------ | -------- | ---------------------------------------------------------------- |
+| `--origin`         | **Yes**  | Origin airport code (e.g., LAX, SFO, ORD)                        |
+| `--destination`    | **Yes**  | Destination airport code (e.g., JFK, BOS, MIA)                   |
+| `--date`           | **Yes**  | Departure date in YYYY-MM-DD format                              |
+| `--passengers`     | **Yes**  | Number of passengers                                             |
+| `--class`          | **Yes**  | Cabin class (must be "economy")                                  |
+| `--output`         | No       | Output file path - if not provided, prints to stdout             |
+| `--proxy`          | No       | Proxy URL (e.g., http://user:pass@host:port)                     |
+| `--save-responses` | No       | Save raw API responses (award_response.json, revenue_response.json) for debugging |
 
 **Notes:**
 

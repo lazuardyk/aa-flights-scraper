@@ -1,11 +1,13 @@
 import curl_cffi
 import json
 import argparse
+import sys
+import time
 from concurrent.futures import ThreadPoolExecutor
 
 
-def get_pricing_response(origin, destination, departure_date, search_type, proxy=None):
-    """Fetch pricing data from American Airlines API"""
+def get_pricing_response(origin, destination, departure_date, search_type, proxy=None, max_retries=3):
+    """Fetch pricing data from American Airlines API with retry logic"""
     if search_type == "award":
         udo = {}
         search_type_api = "Award"
@@ -68,10 +70,68 @@ def get_pricing_response(origin, destination, departure_date, search_type, proxy
     if proxy:
         kwargs["proxies"] = {"http": proxy, "https": proxy}
 
-    response = curl_cffi.post(
-        "https://www.aa.com/booking/api/search/itinerary", **kwargs
-    )
-    return response.json()
+    for attempt in range(max_retries):
+        try:
+            response = curl_cffi.post(
+                "https://www.aa.com/booking/api/search/itinerary", **kwargs
+            )
+
+            # Check for bot detection via status code or HTML response
+            if response.status_code == 403 or response.text.strip().startswith("<"):
+                print(f"{search_type.upper()} API blocked request - bot detection (attempt {attempt + 1}/{max_retries})", file=sys.stderr)
+                print(f"Status code: {response.status_code}", file=sys.stderr)
+                if attempt < max_retries - 1:
+                    wait_time = 2 ** attempt
+                    print(f"Waiting {wait_time} seconds before retry...", file=sys.stderr)
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    print(f"{search_type.upper()} API continues to block after {max_retries} attempts", file=sys.stderr)
+                    return {"error": "access blocked. try use proxy"}
+
+            # Try to parse JSON
+            try:
+                response_json = response.json()
+            except json.JSONDecodeError as e:
+                print(f"{search_type.upper()} API returned non-JSON response (attempt {attempt + 1}/{max_retries})", file=sys.stderr)
+                print(f"Status code: {response.status_code}", file=sys.stderr)
+                print(f"Response preview: {response.text[:200]}", file=sys.stderr)
+                if attempt < max_retries - 1:
+                    wait_time = 2 ** attempt
+                    print(f"Waiting {wait_time} seconds before retry...", file=sys.stderr)
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    print(f"{search_type.upper()} API continues to return non-JSON after {max_retries} attempts", file=sys.stderr)
+                    return {"error": "access blocked. try use proxy"}
+
+            # Check if response is a challenge (bot detection)
+            if response_json.get("cpr_chlge") == "true":
+                print(f"{search_type.upper()} API returned challenge response (attempt {attempt + 1}/{max_retries})", file=sys.stderr)
+                if attempt < max_retries - 1:
+                    # Wait before retrying (exponential backoff)
+                    wait_time = 2 ** attempt
+                    print(f"Waiting {wait_time} seconds before retry...", file=sys.stderr)
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    print(f"{search_type.upper()} API challenge persists after {max_retries} attempts", file=sys.stderr)
+                    return {"error": "access blocked. try use proxy"}
+
+            # Success - return the response
+            return response_json
+
+        except Exception as e:
+            # Catch any other errors (network issues, connection errors, etc.)
+            print(f"Error on attempt {attempt + 1}/{max_retries}: {str(e)}", file=sys.stderr)
+            if attempt < max_retries - 1:
+                wait_time = 2 ** attempt
+                print(f"Waiting {wait_time} seconds before retry...", file=sys.stderr)
+                time.sleep(wait_time)
+                continue
+            else:
+                print(f"All retry attempts failed with error: {str(e)}", file=sys.stderr)
+                return {"error": "access blocked. try use proxy"}
 
 
 def parse_segment(segment):
@@ -175,6 +235,12 @@ def calculate_cpp(cash_price, taxes_fees, points):
 
 def merge_pricing_data(award_response, revenue_response):
     """Merge award and revenue pricing data to calculate CPP (COACH economy only)"""
+    # Check for errors in responses
+    if "error" in award_response:
+        return {"error": award_response["error"]}
+    if "error" in revenue_response:
+        return {"error": revenue_response["error"]}
+
     flights_map = {}
 
     # Process award pricing (COACH economy only)
@@ -230,6 +296,21 @@ def merge_pricing_data(award_response, revenue_response):
 
 def generate_output(origin, destination, date, passengers, flights):
     """Generate the final JSON output"""
+    # Check if flights contains an error
+    if isinstance(flights, dict) and "error" in flights:
+        return {
+            "search_metadata": {
+                "origin": origin,
+                "destination": destination,
+                "date": date,
+                "passengers": passengers,
+                "cabin_class": "economy",
+            },
+            "error": flights["error"],
+            "flights": [],
+            "total_results": 0,
+        }
+
     return {
         "search_metadata": {
             "origin": origin,
@@ -273,6 +354,11 @@ def main():
         help="Output file path (optional - if not provided, prints to stdout)",
     )
     parser.add_argument("--proxy", help="Proxy URL (e.g., http://user:pass@host:port)")
+    parser.add_argument(
+        "--save-responses",
+        action="store_true",
+        help="Save raw API responses to files (award_response.json and revenue_response.json)",
+    )
 
     args = parser.parse_args()
 
@@ -286,6 +372,7 @@ def main():
             args.date,
             "award",
             args.proxy,
+            5,
         )
         revenue_future = executor.submit(
             get_pricing_response,
@@ -294,11 +381,23 @@ def main():
             args.date,
             "revenue",
             args.proxy,
+            5,
         )
 
         # Wait for both to complete
         award_response = award_future.result()
         revenue_response = revenue_future.result()
+
+    # Save API responses if requested
+    if args.save_responses:
+        with open("award_response.json", "w") as f:
+            json.dump(award_response, f, indent=2)
+        with open("revenue_response.json", "w") as f:
+            json.dump(revenue_response, f, indent=2)
+        print(
+            "API responses saved to award_response.json and revenue_response.json",
+            file=sys.stderr,
+        )
 
     # Merge and calculate CPP (COACH economy only)
     flights = merge_pricing_data(award_response, revenue_response)
