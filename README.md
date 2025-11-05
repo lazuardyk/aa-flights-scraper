@@ -43,7 +43,7 @@ python scrape.py \
   --class economy
 ```
 
-Save to file:
+With proxy (recommended):
 
 ```bash
 python scrape.py \
@@ -52,22 +52,10 @@ python scrape.py \
   --date 2025-12-15 \
   --passengers 1 \
   --class economy \
-  --output results.json
+  --proxy http://user:pass@proxy.com:8080
 ```
 
-Another example:
-
-```bash
-python scrape.py \
-  --origin SFO \
-  --destination BOS \
-  --date 2025-12-20 \
-  --passengers 1 \
-  --class economy \
-  --output sfo-bos.json
-```
-
-With proxy:
+Save output to file:
 
 ```bash
 python scrape.py \
@@ -76,8 +64,7 @@ python scrape.py \
   --date 2025-12-15 \
   --passengers 1 \
   --class economy \
-  --proxy http://user:pass@proxy.com:8080 \
-  --output results.json
+  --output /output/results.json
 ```
 
 Debug mode (save raw API responses):
@@ -107,19 +94,7 @@ docker run --rm aa-scraper:latest \
   --class economy
 ```
 
-Save to file:
-
-```bash
-docker run --rm -v $(pwd)/output:/output aa-scraper:latest \
-  --origin LAX \
-  --destination JFK \
-  --date 2025-12-15 \
-  --passengers 1 \
-  --class economy \
-  --output /output/results.json
-```
-
-With proxy:
+With proxy (recommended):
 
 ```bash
 docker run --rm -v $(pwd)/output:/output aa-scraper:latest \
@@ -129,20 +104,31 @@ docker run --rm -v $(pwd)/output:/output aa-scraper:latest \
   --passengers 1 \
   --class economy \
   --proxy http://proxy:8080 \
+```
+
+Save output to file:
+
+```bash
+docker run --rm -v $(pwd)/output:/output aa-scraper:latest \
+  --origin LAX \
+  --destination JFK \
+  --date 2025-12-15 \
+  --passengers 1 \
+  --class economy \
   --output /output/results.json
 ```
 
 ## Command Line Arguments
 
-| Argument           | Required | Description                                                      |
-| ------------------ | -------- | ---------------------------------------------------------------- |
-| `--origin`         | **Yes**  | Origin airport code (e.g., LAX, SFO, ORD)                        |
-| `--destination`    | **Yes**  | Destination airport code (e.g., JFK, BOS, MIA)                   |
-| `--date`           | **Yes**  | Departure date in YYYY-MM-DD format                              |
-| `--passengers`     | **Yes**  | Number of passengers                                             |
-| `--class`          | **Yes**  | Cabin class (must be "economy")                                  |
-| `--output`         | No       | Output file path - if not provided, prints to stdout             |
-| `--proxy`          | No       | Proxy URL (e.g., http://user:pass@host:port)                     |
+| Argument           | Required | Description                                                                       |
+| ------------------ | -------- | --------------------------------------------------------------------------------- |
+| `--origin`         | **Yes**  | Origin airport code (e.g., LAX, SFO, ORD)                                         |
+| `--destination`    | **Yes**  | Destination airport code (e.g., JFK, BOS, MIA)                                    |
+| `--date`           | **Yes**  | Departure date in YYYY-MM-DD format                                               |
+| `--passengers`     | **Yes**  | Number of passengers                                                              |
+| `--class`          | **Yes**  | Cabin class (must be "economy")                                                   |
+| `--output`         | No       | Output file path - if not provided, prints to stdout                              |
+| `--proxy`          | No       | Proxy URL (e.g., http://user:pass@host:port)                                      |
 | `--save-responses` | No       | Save raw API responses (award_response.json, revenue_response.json) for debugging |
 
 **Notes:**
