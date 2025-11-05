@@ -71,13 +71,13 @@ docker run --rm aa-scraper:latest \
 With proxy (recommended):
 
 ```bash
-docker run --rm -v $(pwd)/output:/output aa-scraper:latest \
+docker run --rm aa-scraper:latest \
   --origin LAX \
   --destination JFK \
   --date 2025-12-15 \
   --passengers 1 \
   --class economy \
-  --proxy http://proxy:8080 \
+  --proxy http://localhost:3128
 ```
 
 ## Command Line Arguments
