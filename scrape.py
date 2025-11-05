@@ -301,10 +301,6 @@ def main():
         revenue_response = revenue_future.result()
 
     # Merge and calculate CPP (COACH economy only)
-    print(
-        "Processing flight data and calculating CPP (Economy/COACH only)...",
-        file=__import__("sys").stderr,
-    )
     flights = merge_pricing_data(award_response, revenue_response)
 
     # Generate output
@@ -316,27 +312,10 @@ def main():
     if args.output:
         with open(args.output, "w") as f:
             json.dump(output, f, indent=2)
-        print(
-            f"\n✓ Found {len(flights)} economy/COACH flights with both award and cash pricing",
-            file=__import__("sys").stderr,
-        )
-        print(f"✓ Results saved to {args.output}", file=__import__("sys").stderr)
+        print(f"Results saved to {args.output}")
     else:
         # Print JSON to stdout
         print(json.dumps(output, indent=2))
-
-    # Print summary to stderr
-    if flights and args.output:
-        print("\nTop 5 economy/COACH flights by CPP:", file=__import__("sys").stderr)
-        sorted_flights = sorted(flights, key=lambda x: x["cpp"], reverse=True)
-        for i, flight in enumerate(sorted_flights[:5], 1):
-            segments_str = " → ".join(
-                [f"{s['flight_number']}" for s in flight["segments"]]
-            )
-            print(
-                f"  {i}. {segments_str}: {flight['cpp']:.2f} CPP (${flight['cash_price_usd']:.2f} or {flight['points_required']:,} pts)",
-                file=__import__("sys").stderr,
-            )
 
 
 if __name__ == "__main__":
