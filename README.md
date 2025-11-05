@@ -55,30 +55,6 @@ python scrape.py \
   --proxy http://user:pass@proxy.com:8080
 ```
 
-Save output to file:
-
-```bash
-python scrape.py \
-  --origin LAX \
-  --destination JFK \
-  --date 2025-12-15 \
-  --passengers 1 \
-  --class economy \
-  --output /output/results.json
-```
-
-Debug mode (save raw API responses):
-
-```bash
-python scrape.py \
-  --origin LAX \
-  --destination JFK \
-  --date 2025-12-15 \
-  --passengers 1 \
-  --class economy \
-  --save-responses
-```
-
 This will save `award_response.json` and `revenue_response.json` to the current directory for debugging purposes.
 
 ### Docker Usage
@@ -104,18 +80,6 @@ docker run --rm -v $(pwd)/output:/output aa-scraper:latest \
   --passengers 1 \
   --class economy \
   --proxy http://proxy:8080 \
-```
-
-Save output to file:
-
-```bash
-docker run --rm -v $(pwd)/output:/output aa-scraper:latest \
-  --origin LAX \
-  --destination JFK \
-  --date 2025-12-15 \
-  --passengers 1 \
-  --class economy \
-  --output /output/results.json
 ```
 
 ## Command Line Arguments
@@ -187,20 +151,6 @@ CPP = ($289.00 - $5.60) / 12,500 × 100 = 2.27
 ```
 
 This means each point is worth 2.27 cents when booking this flight.
-
-## Proxy Support
-
-The scraper supports proxy configuration via command line argument:
-
-```bash
-python scrape.py \
-  --origin LAX \
-  --destination JFK \
-  --date 2025-12-15 \
-  --passengers 1 \
-  --class economy \
-  --proxy http://proxy:8080
-```
 
 ## Docker Compose
 
